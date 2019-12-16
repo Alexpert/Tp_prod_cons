@@ -1,4 +1,4 @@
-package jus.poc.prodcons.v1;
+package jus.poc.prodcons.v2;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,11 +15,11 @@ public class TestProdCons {
 		properties.loadFromXML(TestProdCons.class.getClassLoader().getResourceAsStream(filePath));
 		
 		int nProd 		= 50;
-		int nCons 		= 50;
+		int nCons 		= 5;
 		int bufSz 		= 10;
 		int prodTime 	= 100;
 		int consTime 	= 100;
-		int minProd 	= 50;
+		int minProd 	= 1;
 		int maxProd 	= 150;
 		
 //		int nProd 		= Integer.parseInt(properties.getProperty("nProd"));
