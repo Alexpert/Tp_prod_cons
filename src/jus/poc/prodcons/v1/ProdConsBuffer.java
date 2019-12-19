@@ -10,7 +10,7 @@ public class ProdConsBuffer implements IProdConsBuffer {
 	@Override
 	public synchronized void put(Message msg) throws InterruptedException {
 		while(this.queue.getFreeSize() == 0) {
-			System.out.println("freesize: " + this.queue.getFreeSize());
+//			System.out.println("freesize: " + this.queue.getFreeSize());
 			wait();
 		}
 		
@@ -25,10 +25,10 @@ public class ProdConsBuffer implements IProdConsBuffer {
 
 	@Override
 	public synchronized Message get() throws InterruptedException {
-		System.out.println("usedSize: " + this.queue.getUsedSize());
+//		System.out.println("usedSize: " + this.queue.getUsedSize());
 		
 		while(this.queue.getUsedSize() == 0) {
-			System.out.println("freesize: " + this.queue.getFreeSize());
+//			System.out.println("freesize: " + this.queue.getFreeSize());
 			wait();
 		}
 		

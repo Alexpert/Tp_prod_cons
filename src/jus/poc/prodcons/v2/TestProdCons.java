@@ -64,13 +64,22 @@ public class TestProdCons {
 		
 		Collections.shuffle(actors);
 		
+		long start = System.currentTimeMillis();
+		
 		for (Actor actor: actors)
 			new Thread(actor).start();
 		
+		
 		while(buffer.totmsg() < totalMsg) {
-			Thread.sleep(100);
+			Thread.sleep(1);
 		}
-		System.err.println("GAME OVER");
+
+		long time = System.currentTimeMillis() - start;
+		
+		System.err.println("GAME OVER\nTime: " + time + " ms;" + 
+				" Nb Msgs: " + totalMsg + ";" + 
+				" Flow: " + (double) totalMsg / ((double) time / 1000 )+ " Msg/sec;");
+		
 		System.exit(0);
 
 	}

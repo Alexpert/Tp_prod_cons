@@ -1,4 +1,5 @@
-package jus.poc.prodcons.v3;
+package jus.poc.prodcons.v4;
+
 import java.util.concurrent.Semaphore;
 
 public class ProdConsBuffer implements IProdConsBuffer {
@@ -14,78 +15,103 @@ public class ProdConsBuffer implements IProdConsBuffer {
 
 	@Override
 	public void put(Message msg) throws InterruptedException {
-		this.fifoR.acquire();
+		this.fifoW.acquire();
 		
 		synchronized (this) {
 			while(this.queue.getFreeSize() == 0) {
-//				System.out.println("freesize: " + this.queue.getFreeSize());
+				System.out.println("freesize: " + this.queue.getFreeSize());
 				wait();
 			}
 		
 			try {
 				this.queue.put(msg);
-				this.fifoR.release();
 				notifyAll();
 			} catch (FullQueueException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		
+		this.fifoW.release();
+		
+		msg.waitExtinction();
+	}
+
+	@Override
+	public void put(Message msg, int n) throws InterruptedException {
+		fifoW.acquire();
+		
+		synchronized (this) {
+			while (n > 0) {
+				while (this.queue.getFreeSize() == 0)
+					wait();
+
+				try {
+					this.queue.put(msg);
+					notifyAll();
+				} catch (FullQueueException e) {
+					e.printStackTrace();
+				}
+				
+				--n;
+			}
+		}
+		this.fifoW.release();
+		
+		msg.waitExtinction();
 	}
 
 	@Override
 	public Message get() throws InterruptedException {
-//		System.out.println("usedSize: " + this.queue.getUsedSize());
+		System.out.println("usedSize: " + this.queue.getUsedSize());
 		Message msg;
-		this.fifoW.acquire();
+		this.fifoR.acquire();
 		
 		synchronized (this) {
 			while(this.queue.getUsedSize() == 0) {
-//				System.out.println("freesize: " + this.queue.getFreeSize());
+				System.out.println("freesize: " + this.queue.getFreeSize());
 				wait();
 			}
 		
 			try {
 				msg = this.queue.get();
-				this.fifoW.release();
+				msg.decrementQuantity();
 				notifyAll();
 			} catch (EmptyQueueException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
 				msg = null;
+				e.printStackTrace();
 			}
 		}
+		msg.waitExtinction();
+		this.fifoR.release();
 		return msg;
 	}
 
 	@Override
 	public Message[] get(int n) throws InterruptedException {
 		Message[] msgs = new Message[n];
-//		System.out.println("usedSize: " + this.queue.getUsedSize());
-		this.fifoW.acquire();
+		this.fifoR.acquire();
 		
-		while (n > 0) {
-			synchronized (this) {
-				while(this.queue.getUsedSize() == 0) {
-//					System.out.println("freesize: " + this.queue.getFreeSize());
+		synchronized (this) {
+			while (n > 0) {
+				while(this.queue.getUsedSize() == 0)
 					wait();
-				}
-			
+
+				Message msg;
 				try {
-					msgs[n - 1] = this.queue.get();
+					msg = this.queue.get();
+					msgs[n - 1] = msg;
+					msg.decrementQuantity();
 					notifyAll();
-					
 				} catch (EmptyQueueException e) {
-					// TODO Auto-generated catch block
+					msg = null;
 					e.printStackTrace();
 				}
+				
+				--n;
 			}
-			--n;
 		}
-
-		this.fifoW.release();
 		
+		this.fifoR.release();
 		return msgs;
 	}
 
@@ -96,7 +122,11 @@ public class ProdConsBuffer implements IProdConsBuffer {
 
 	@Override
 	public int totmsg() {
-		return this.queue.getTotalCount();
+		return this.queue.getTotalPut();
+	}
+	
+	public int totread() {
+		return this.queue.getTotalGet();
 	}
 
 }

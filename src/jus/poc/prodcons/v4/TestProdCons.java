@@ -1,4 +1,4 @@
-package jus.poc.prodcons.v3;
+package jus.poc.prodcons.v4;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ public class TestProdCons {
 //		int maxProd 	= 200;
 //		int minCons 	= 1;
 //		int maxCons 	= 200;
+//		int nbExpl 		= 5;
 		
 		int nProd 		= Integer.parseInt(properties.getProperty("nProd"));
 		int nCons 		= Integer.parseInt(properties.getProperty("nCons"));
@@ -33,6 +34,7 @@ public class TestProdCons {
 		int maxProd 	= Integer.parseInt(properties.getProperty("maxProd"));
 		int minCons 	= Integer.parseInt(properties.getProperty("minCons"));
 		int maxCons 	= Integer.parseInt(properties.getProperty("maxCons"));
+		int nbExpl 		= Integer.parseInt(properties.getProperty("nbExpl"));
 		
 		Random rand = new Random();
 		ArrayList<Producer> producers = new ArrayList<>();
@@ -49,11 +51,13 @@ public class TestProdCons {
 		System.out.println("maxProd " + maxProd);
 		System.out.println("minCons " + minCons);
 		System.out.println("maxCons " + maxCons);
+		System.out.println("nbExpl " + nbExpl);
 		
 		int totalMsg = 0;
 		
 		for (int i = 0; i < nProd; i++) {
-			Producer producer = new Producer(prodTime, rand.nextInt(maxProd - minProd) + minProd);
+			Producer producer = new Producer(prodTime, 
+					rand.nextInt(maxProd - minProd) + minProd, rand.nextInt(nbExpl), i);
 			producer.setBuffer(buffer);
 			producers.add(producer);
 			actors.add(producer);
@@ -75,16 +79,15 @@ public class TestProdCons {
 		for (Actor actor: actors)
 			new Thread(actor).start();
 		
-		while(buffer.totmsg() < totalMsg) {
+		while(buffer.totmsg() < totalMsg || buffer.totread() < totalMsg) {
 			Thread.sleep(1);
 		}
-
+		
 		long time = System.currentTimeMillis() - start;
 		
 		System.err.println("GAME OVER\nTime: " + time + " ms;" + 
 				" Nb Msgs: " + totalMsg + ";" + 
 				" Flow: " + (double) totalMsg / ((double) time / 1000 )+ " Msg/sec;");
-		
 		System.exit(0);
 
 	}
